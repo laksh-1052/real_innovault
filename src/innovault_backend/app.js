@@ -46,12 +46,6 @@ passport.serializeUser(function(user, done) {
   done(null, user.id);
 });
 
-// passport.deserializeUser(function(id, done) {
-//   User.findById(id, function(err, user) {
-//     done(err, user);
-//   });
-// });
-
 passport.deserializeUser(async function(id, done) {
     try {
       const user = await User.findById(id);
@@ -61,7 +55,6 @@ passport.deserializeUser(async function(id, done) {
     }
   });
   
-
 passport.use(new GoogleStrategy({
     clientID: process.env.CLIENT_ID,
     clientSecret: process.env.CLIENT_SECRET,
@@ -104,19 +97,6 @@ app.get("/dashboard", function(req, res){
     res.render("dashboard");
   });
   
-
-// app.get("/secrets", function(req, res){
-//   User.find({"secret": {$ne: null}}, function(err, foundUsers){
-//     if (err){
-//       console.log(err);
-//     } else {
-//       if (foundUsers) {
-//         res.render("secrets", {usersWithSecrets: foundUsers});
-//       }
-//     }
-//   });
-// });
-
 app.get("/submit", function(req, res){
   if (req.isAuthenticated()){
     res.render("dashboard");
@@ -124,26 +104,6 @@ app.get("/submit", function(req, res){
     res.redirect("/login");
   }
 });
-
-// app.post("/submit", function(req, res){
-//   const submittedSecret = req.body.secret;
-
-//Once the user is authenticated and their session gets saved, their user details are saved to req.user.
-  // console.log(req.user.id);
-
-//   User.findById(req.user.id, function(err, foundUser){
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       if (foundUser) {
-//         foundUser.secret = submittedSecret;
-//         foundUser.save(function(){
-//           res.redirect("/secrets");
-//         });
-//       }
-//     }
-//   });
-// });
 
 app.get("/logout", function(req, res){
   req.logout();
