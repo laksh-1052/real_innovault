@@ -1,4 +1,3 @@
-//jshint esversion:6
 require('dotenv').config();
 const express = require("express");
 const bodyParser = require("body-parser");
@@ -32,7 +31,8 @@ const userSchema = new mongoose.Schema ({
   email: String,
   password: String,
   googleId: String,
-  secret: String
+  secret: String,
+  username:{ type: String, unique: false }
 });
 
 userSchema.plugin(passportLocalMongoose);
@@ -55,31 +55,41 @@ passport.deserializeUser(async function(id, done) {
     }
   });
   
+// passport.use(new GoogleStrategy({
+//     clientID: process.env.CLIENT_ID,
+//     clientSecret: process.env.CLIENT_SECRET,
+//     callbackURL: "http://localhost:3000/auth/google/innovault",
+//     userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+//   },
+//   function(accessToken, refreshToken, profile, cb) {
+//     console.log(profile);
+
+//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
+//       return cb(err, user);
+//     });
+//   }
+// ));
 passport.use(new GoogleStrategy({
-    clientID: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET,
-    callbackURL: "http://localhost:3000/auth/google/innovault",
-    userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
-  },
-  function(accessToken, refreshToken, profile, cb) {
-    console.log(profile);
+  clientID: process.env.CLIENT_ID,
+  clientSecret: process.env.CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/google/innovault",
+  userProfileURL: "https://www.googleapis.com/oauth2/v3/userinfo"
+},
 
-    User.findOrCreate({ googleId: profile.id }, function (err, user) {
-      return cb(err, user);
-    });
-  }
-));
+function(accessToken, refreshToken, profile, cb) {
+  console.log(profile);
 
-app.get("/", function(req, res){
-  res.render("home");
-});
+  User.findOrCreate({ googleId: profile.id, username: profile.displayName || 'defaultUsername' }, function (err, user) {
+    return cb(err, user);
+  });
+}));
 
 app.get("/auth/google",
   passport.authenticate('google', { scope: ["profile"] })
 );
 
 app.get("/auth/google/innovault",
-  passport.authenticate('google', { failureRedirect: "/login" }),
+  passport.authenticate('google', { failureRedirect: "/register" }),
   function(req, res) {
     // Successful authentication, redirect to secrets.
     res.redirect("/dashboard");
@@ -143,12 +153,6 @@ app.post("/login", function(req, res){
   });
 
 });
-
-
-
-
-
-
 
 app.listen(3000, function() {
   console.log("Server started on port 3000.");
